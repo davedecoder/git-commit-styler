@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"testing"
@@ -37,6 +38,38 @@ func Test_getFileData(t *testing.T)  {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("getFileData() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_checkIfValidFile(t *testing.T) {
+	tmpFile, err := ioutil.TempFile("", "test*.csv")
+	if err != nil {
+		panic(err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	tests := []struct {
+		name    string
+		filename    string
+		want    bool
+		wantErr bool
+	}{
+		{ "File does exists", tmpFile.Name(), true, false},
+		{ "File does not exists", "nowhere/file.csv", false, true},
+		{ "File is not csv", "text.txt", false, true},
+
+	}
+		for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := checkIfValidFile(tt.filename)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("checkIfValidFile() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("checkIfValidFile() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
